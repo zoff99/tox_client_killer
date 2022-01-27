@@ -110,7 +110,17 @@ void r()
 {
     for (int i=0; i < v_size; i++)
     {
-        v[i] = (rand() % 254) + 1;
+        // random value 1..255
+        v[i] = (rand() % 255) + 1;
+    }
+}
+
+void r0()
+{
+    for (int i=0; i < v_size; i++)
+    {
+        // random value 0..255
+        v[i] = (rand() % 256);
     }
 }
 
@@ -118,6 +128,7 @@ void ra()
 {
     for (int i=0; i < v_size; i++)
     {
+        // random A..Z (uppercase)
         v[i] = 'A' + random() % 26;
     }
 }
@@ -133,7 +144,8 @@ void m3()
     int start = v_size - (TOX_MSGV3_GUARD + TOX_MSGV3_MSGID_LENGTH + TOX_MSGV3_TIMESTAMP_LENGTH) + 2;
     for (int i=start;i<TOX_MSGV3_MSGID_LENGTH;i++)
     {
-        v[i] = (rand() % 254) + 1;
+        // random value 1..255
+        v[i] = (rand() % 255) + 1;
     }
 }
 
@@ -171,6 +183,7 @@ int main(int argc, char *argv[])
     printf("Killing Toxclient at ToxID: %s\n", argv[1]);
 
     stop_all = 0;
+    srandom(time(NULL));
 
     struct Tox_Options options;
     tox_options_default(&options);
@@ -322,6 +335,23 @@ int main(int argc, char *argv[])
     n++;
     c(10);
     ra();
+    tox_self_set_name(tox1, (const uint8_t *)v, v_size, NULL);
+    f();
+    it(tox1);
+
+    printf("TEST-%d:%s\n", n, "change own name NULL terminated");
+    n++;
+    c(10);
+    ra();
+    nt();
+    tox_self_set_name(tox1, (const uint8_t *)v, v_size, NULL);
+    f();
+    it(tox1);
+
+    printf("TEST-%d:%s\n", n, "change own name to random bytes maybe NULL terminated (random byte at the end)");
+    n++;
+    c(TOX_MAX_NAME_LENGTH / 2);
+    r0();
     tox_self_set_name(tox1, (const uint8_t *)v, v_size, NULL);
     f();
     it(tox1);
