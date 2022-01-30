@@ -31,6 +31,16 @@ const int av_iterate_loops = 20;
 static uint8_t *v = NULL;
 static size_t v_size = 0;
 
+uint32_t s_r(const uint32_t upper_bound)
+{
+    return randombytes_uniform(upper_bound);
+}
+
+uint32_t n_r(const uint32_t upper_bound)
+{
+    return rand() % upper_bound;
+}
+
 void self_connection_status(Tox *tox, TOX_CONNECTION status, void *userData)
 {
 	if (status == TOX_CONNECTION_NONE) {
@@ -177,7 +187,7 @@ void r()
     for (int i=0; i < v_size; i++)
     {
         // random value 1..255
-        v[i] = (rand() % 255) + 1;
+        v[i] = (s_r(255)) + 1;
     }
 }
 
@@ -186,7 +196,7 @@ void r0()
     for (int i=0; i < v_size; i++)
     {
         // random value 0..255
-        v[i] = (rand() % 256);
+        v[i] = (s_r(256));
     }
 }
 
@@ -195,7 +205,7 @@ void ra()
     for (int i=0; i < v_size; i++)
     {
         // random A..Z (uppercase)
-        v[i] = 'A' + random() % 26;
+        v[i] = 'A' + s_r(26);
     }
 }
 
@@ -211,7 +221,7 @@ void m3()
     for (int i=start;i<TOX_MSGV3_MSGID_LENGTH;i++)
     {
         // random value 1..255
-        v[i] = (rand() % 255) + 1;
+        v[i] = (s_r(255)) + 1;
     }
 }
 
@@ -231,7 +241,7 @@ void rvbuf(uint8_t *buf, size_t size)
     for (int i=0; i < size; i++)
     {
         // random value 1..255
-        *buf = (uint8_t)((rand() % 255) + 1);
+        *buf = (uint8_t)((n_r(255)) + 1);
         buf++;
     }
 }
@@ -241,7 +251,7 @@ void rvbuf0(uint8_t *buf, size_t size)
     for (int i=0; i < size; i++)
     {
         // random value 0..255
-        *buf = (uint8_t)(rand() % 256);
+        *buf = (uint8_t)(n_r(256));
         buf++;
     }
 }
@@ -269,35 +279,9 @@ void svr()
     // 1920 x 1080 -> 1080p
     //
     //                 random value 1..1920
-    uint16_t width =  (rand() % 1920) + 1;
+    uint16_t width =  (s_r(1920)) + 1;
     //                 random value 1..1080
-    uint16_t height = (rand() % 1080) + 1;
-
-    // HINT: x264 needs width divisble by 2 !
-    if ((width % 2) != 0)
-    {
-        if (width > 1078)
-        {
-            width--;
-        }
-        else
-        {
-            width++;
-        }
-    }
-
-    // HINT: x264 needs height divisble by 2 !
-    if ((height % 2) != 0)
-    {
-        if (height > 1918)
-        {
-            height--;
-        }
-        else
-        {
-            height++;
-        }
-    }
+    uint16_t height = (s_r(1080)) + 1;
 
     size_t y_size = width * height;
     size_t u_size = (height/2) * (width/2);
@@ -463,6 +447,12 @@ void svpr()
     free(data);
 }
 
+void tox_log_cb__custom(Tox *tox, TOX_LOG_LEVEL level, const char *file, uint32_t line, const char *func,
+                        const char *message, void *user_data)
+{
+    printf("  C-TOXCORE:%d:%s:%d:%s:%s\n", (int)level, file, (int)line, func, message);
+}
+
 int main(int argc, char *argv[])
 {
     // Three-byte sequence (E0 80 80) is the broken sequence
@@ -491,6 +481,13 @@ int main(int argc, char *argv[])
 
     struct Tox_Options options;
     tox_options_default(&options);
+
+    options.udp_enabled = true;
+    options.ipv6_enabled = true;
+    options.local_discovery_enabled = true;
+    options.hole_punching_enabled = true;
+    options.tcp_port = 0;
+    options.log_callback = tox_log_cb__custom;
 
     tox1 = tox_new(&options, NULL);
     print_tox_id(tox1);
@@ -771,12 +768,12 @@ int main(int argc, char *argv[])
     // ---------     VIDEO      ---------
     // ---------     VIDEO      ---------
 
-    // ------ send random video data with random resolution for 10 seconds ------
+    // ------ send random video data with random resolution for 12 seconds ------
     start = time(NULL);
 	while (true) {
         end = time(NULL);
         elapsed = difftime(end, start);
-        if (elapsed > 10)
+        if (elapsed > 12)
         {
             break;
         }
@@ -787,14 +784,14 @@ int main(int argc, char *argv[])
 		long long time = 40 * 1000000L; // 40ms =~ 25fps
 		nanosleep((const struct timespec[]){{0, time}}, NULL);
 	}
-    // ------ send random video data with random resolution for 10 seconds ------
+    // ------ send random video data with random resolution for 12 seconds ------
 
-    // ------ send random video packets for 10 seconds ------
+    // ------ send random video packets for 6 seconds ------
     start = time(NULL);
 	while (true) {
         end = time(NULL);
         elapsed = difftime(end, start);
-        if (elapsed > 10)
+        if (elapsed > 6)
         {
             break;
         }
@@ -805,7 +802,7 @@ int main(int argc, char *argv[])
 		long long time = 40 * 1000000L; // 40ms =~ 25fps
 		nanosleep((const struct timespec[]){{0, time}}, NULL);
 	}
-    // ------ send random video packets for 10 seconds ------
+    // ------ send random video packets for 6 seconds ------
 
     itav(tox1, toxav1);
     toxav_call_control(toxav1, 0, TOXAV_CALL_CONTROL_CANCEL, NULL);
