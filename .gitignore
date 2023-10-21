@@ -1,0 +1,4 @@
+tox_client_killer
+tox_client_killer.o
+toxcore_amalgamation.a
+toxcore_amalgamation.o

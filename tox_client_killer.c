@@ -332,30 +332,30 @@ struct RTPMessage {
     uint8_t data[];
 };
 
-size_t net_pack_u16(uint8_t *bytes, uint16_t v)
+size_t lnet_pack_u16(uint8_t *bytes, uint16_t v)
 {
     bytes[0] = (v >> 8) & 0xff;
     bytes[1] = v & 0xff;
     return sizeof(v);
 }
 
-size_t net_pack_u32(uint8_t *bytes, uint32_t v)
+size_t lnet_pack_u32(uint8_t *bytes, uint32_t v)
 {
     uint8_t *p = bytes;
-    p += net_pack_u16(p, (v >> 16) & 0xffff);
-    p += net_pack_u16(p, v & 0xffff);
+    p += lnet_pack_u16(p, (v >> 16) & 0xffff);
+    p += lnet_pack_u16(p, v & 0xffff);
     return p - bytes;
 }
 
-size_t net_pack_u64(uint8_t *bytes, uint64_t v)
+size_t lnet_pack_u64(uint8_t *bytes, uint64_t v)
 {
     uint8_t *p = bytes;
-    p += net_pack_u32(p, (v >> 32) & 0xffffffff);
-    p += net_pack_u32(p, v & 0xffffffff);
+    p += lnet_pack_u32(p, (v >> 32) & 0xffffffff);
+    p += lnet_pack_u32(p, v & 0xffffffff);
     return p - bytes;
 }
 
-size_t rtp_header_pack(uint8_t *const rdata, const struct RTPHeader *header)
+size_t lrtp_header_pack(uint8_t *const rdata, const struct RTPHeader *header)
 {
     uint8_t *p = rdata;
     *p = (header->ve & 3) << 6
@@ -367,33 +367,33 @@ size_t rtp_header_pack(uint8_t *const rdata, const struct RTPHeader *header)
          | (header->pt & 0x7f);
     ++p;
 
-    p += net_pack_u16(p, header->sequnum);
-    p += net_pack_u32(p, header->timestamp);
-    p += net_pack_u32(p, header->ssrc);
-    p += net_pack_u64(p, header->flags);
-    p += net_pack_u32(p, header->offset_full);
-    p += net_pack_u32(p, header->data_length_full);
-    p += net_pack_u32(p, header->received_length_full);
+    p += lnet_pack_u16(p, header->sequnum);
+    p += lnet_pack_u32(p, header->timestamp);
+    p += lnet_pack_u32(p, header->ssrc);
+    p += lnet_pack_u64(p, header->flags);
+    p += lnet_pack_u32(p, header->offset_full);
+    p += lnet_pack_u32(p, header->data_length_full);
+    p += lnet_pack_u32(p, header->received_length_full);
 
     // ---------------------------- //
     //      custom fields here      //
     // ---------------------------- //
-    p += net_pack_u64(p, header->frame_record_timestamp);
-    p += net_pack_u32(p, header->fragment_num);
-    p += net_pack_u32(p, header->real_frame_num);
-    p += net_pack_u32(p, header->encoder_bit_rate_used);
-    p += net_pack_u32(p, header->client_video_capture_delay_ms);
-    p += net_pack_u32(p, header->rtp_packet_number);
+    p += lnet_pack_u64(p, header->frame_record_timestamp);
+    p += lnet_pack_u32(p, header->fragment_num);
+    p += lnet_pack_u32(p, header->real_frame_num);
+    p += lnet_pack_u32(p, header->encoder_bit_rate_used);
+    p += lnet_pack_u32(p, header->client_video_capture_delay_ms);
+    p += lnet_pack_u32(p, header->rtp_packet_number);
     // ---------------------------- //
     //      custom fields here      //
     // ---------------------------- //
 
     for (size_t i = 0; i < RTP_PADDING_FIELDS; ++i) {
-        p += net_pack_u32(p, 0);
+        p += lnet_pack_u32(p, 0);
     }
 
-    p += net_pack_u16(p, header->offset_lower);
-    p += net_pack_u16(p, header->data_length_lower);
+    p += lnet_pack_u16(p, header->offset_lower);
+    p += lnet_pack_u16(p, header->data_length_lower);
     return p - rdata;
 }
 
@@ -437,7 +437,7 @@ void svpr()
     rdata[0] = RTP_TYPE_VIDEO;  // packet id == payload_type
 
     header.rtp_packet_number = 0;
-    rtp_header_pack(rdata + 1, &header);
+    lrtp_header_pack(rdata + 1, &header);
     memcpy(rdata + 1 + RTP_HEADER_SIZE, data, length);
 
     TOX_ERR_FRIEND_CUSTOM_PACKET error;
@@ -561,6 +561,9 @@ int main(int argc, char *argv[])
     printf("  DEBUG:test client online\n");
     // ---------------------------------------------------------------------
 
+    const int run_loops = 10;
+    for(int curloop=0;curloop<run_loops;curloop++)
+    {
 
     // ---------    message     ---------
     // ---------    message     ---------
@@ -749,6 +752,7 @@ int main(int argc, char *argv[])
     // ---------     name       ---------
     // ---------     name       ---------
 
+    }
 
     // ---------     VIDEO      ---------
     // ---------     VIDEO      ---------
