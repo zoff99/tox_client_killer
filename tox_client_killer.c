@@ -12,6 +12,13 @@
 #include <tox/tox.h>
 #include <tox/toxav.h>
 
+/*
+ *
+ * gcc -g -O2 tox_client_killer.c toxcore_amalgamation.c -o tox_client_killer -I. $(pkg-config --libs --cflags opus) $(pkg-config --libs --cflags libsodium vpx x264 libavcodec libavutil)
+ *
+ */
+
+
 static Tox *tox1 = NULL;
 static ToxAV *toxav1 = NULL;
 int online1 = 0;
@@ -561,7 +568,7 @@ int main(int argc, char *argv[])
     printf("  DEBUG:test client online\n");
     // ---------------------------------------------------------------------
 
-    const int run_loops = 10;
+    const int run_loops = 2;
     for(int curloop=0;curloop<run_loops;curloop++)
     {
 
